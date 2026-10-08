@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Sydney Mobility App</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    #map { height: 100vh; width: 100vw; }
+    .filter-bar {
+      position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; display: flex; gap: 8px; background: rgba(255, 255, 255, 0.9);
+      padding: 6px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .filter-btn {
+      border: none; background: #f0f0f0; padding: 8px 14px; border-radius: 14px;
+      font-weight: 600; font-size: 13px; cursor: pointer; color: #333;
+    }
+    .filter-btn.active { background: #007aff; color: white; }
+  </style>
+</head>
+<body>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterMarkers('all', this)">All</button>
+    <button class="filter-btn" onclick="filterMarkers('bus', this)">🚌 Buses</button>
+    <button class="filter-btn" onclick="filterMarkers('bike', this)">🚲 Lime</button>
+    <button class="filter-btn" onclick="filterMarkers('ride', this)">🚗 Rides</button>
+  </div>
+
+  <div id="map"></div>
+
+  <script>
+    // Initialize map centered on Sydney / Inner West
+    const map = L.map('map').setView([-33.8885, 151.1275], 14);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    let markers = [];
+
+    // Mock Live Vehicles around Sydney / Croydon Park area
+    const vehicles = [
+      { id: 'Bus 464', type: 'bus', lat: -33.8882, lng: 151.1271 },
+      { id: 'Bus 410', type: 'bus', lat: -33.8895, lng: 151.1290 },
+      { id: 'Lime Bike #89', type: 'bike', lat: -33.8870, lng: 151.1250 },
+      { id: 'Lime Scooter #12', type: 'bike', lat: -33.8860, lng: 151.1285 },
+      { id: 'Uber X', type: 'ride', lat: -33.8900, lng: 151.1240 }
+    ];
+
+    function loadVehicles() {
+      vehicles.forEach(v => {
+        let color = v.type === 'bus' ? '#28a745' : v.type === 'bike' ? '#00e676' : '#007aff';
+        let marker = L.circleMarker([v.lat, v.lng], {
+          radius: 8, fillColor: color, color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.9
+        }).bindPopup(`<b>${v.id}</b><br>Type: ${v.type.toUpperCase()}`);
+        
+        marker.vehicleType = v.type;
+        marker.addTo(map);
+        markers.push(marker);
+      });
+    }
+
+    function filterMarkers(type, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      markers.forEach(m => {
+        if (type === 'all' || m.vehicleType === type) {
+          map.addLayer(m);
+        } else {
+          map.removeLayer(m);
+        }
+      });
+    }
+
+    loadVehicles();
+  </script>
+</body>
+</html>
